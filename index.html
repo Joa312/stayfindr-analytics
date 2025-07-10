@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>STAYFINDR - European Hotel Search</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏨</text></svg>">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
     <style>
         body {     
             font-family: 'Segoe UI', sans-serif;     
@@ -113,6 +116,12 @@
             font-size: 1.2rem;
             text-align: center;
             padding: 20px;
+        }
+        #map {     
+            border-radius: 15px;     
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            height: 100%;
+            width: 100%;
         }
         .hotels-panel {     
             background: rgba(255,255,255,0.95);     
@@ -427,9 +436,15 @@
                 height: auto !important;
                 gap: 15px !important;
             }
-            .map-placeholder {
-                height: 200px !important;
+            #map-container {
+                height: 300px !important;
                 margin-bottom: 15px !important;
+            }
+            .map-placeholder {
+                height: 300px !important;
+            }
+            #map {
+                height: 300px !important;
             }
             .hotels-panel {
                 height: 500px !important;
@@ -489,8 +504,14 @@
             .search-container {
                 padding: 15px !important;
             }
+            #map-container {
+                height: 250px !important;
+            }
             .map-placeholder {
-                height: 150px !important;
+                height: 250px !important;
+            }
+            #map {
+                height: 250px !important;
             }
             .hotels-panel {
                 height: 400px !important;
@@ -585,9 +606,12 @@
         </div>
 
         <div class="main-content">
-            <div class="map-placeholder">
-                🌍 STAYFINDR<br>
-                <small>29 European Cities</small>
+            <div id="map-container">
+                <div class="map-placeholder" id="mapPlaceholder">
+                    🗺️ Loading map...<br>
+                    <small>Please wait</small>
+                </div>
+                <div id="map" style="display: none;"></div>
             </div>
             <div class="hotels-panel">
                 <h3 id="hotelsTitle">Hotels</h3>
@@ -770,7 +794,12 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
     <script>
+        let map = null;
+        let currentMarkers = [];
         let currentHotels = [];
         let allHotelsData = [];
         let currentlyShowing = 5;
@@ -778,6 +807,141 @@
 
         // GDPR Analytics Management
         let analyticsEnabled = false;
+
+        // Simple map initialization
+        function initializeMap() {
+            try {
+                // Check if Leaflet is loaded
+                if (typeof L === 'undefined') {
+                    console.log('⏳ Leaflet not ready yet...');
+                    return false;
+                }
+
+                const mapElement = document.getElementById('map');
+                const placeholderElement = document.getElementById('mapPlaceholder');
+                
+                if (!mapElement) {
+                    console.log('❌ Map element not found');
+                    return false;
+                }
+
+                // Initialize the map
+                map = L.map('map').setView([59.3293, 18.0686], 6);
+                
+                // Add tiles
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                // Hide placeholder, show map
+                if (placeholderElement) placeholderElement.style.display = 'none';
+                mapElement.style.display = 'block';
+                
+                // Force map to resize
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
+
+                console.log('✅ Map initialized successfully');
+                trackEvent('map_initialized', {});
+                return true;
+
+            } catch (error) {
+                console.error('❌ Map initialization failed:', error);
+                return false;
+            }
+        }
+
+        // Update map with hotel markers
+        function updateMap(hotels) {
+            if (!map || !hotels || hotels.length === 0) {
+                console.log('No map or hotels available');
+                return;
+            }
+
+            try {
+                // Clear existing markers
+                currentMarkers.forEach(marker => {
+                    map.removeLayer(marker);
+                });
+                currentMarkers = [];
+
+                // Find first hotel with valid coordinates
+                const centerHotel = hotels.find(hotel => 
+                    hotel.coordinates && 
+                    Array.isArray(hotel.coordinates) && 
+                    hotel.coordinates.length === 2
+                );
+
+                if (centerHotel) {
+                    // Center map on first hotel
+                    map.setView(centerHotel.coordinates, 12);
+
+                    // Add markers for all hotels
+                    hotels.forEach((hotel, index) => {
+                        if (hotel.coordinates && 
+                            Array.isArray(hotel.coordinates) && 
+                            hotel.coordinates.length === 2) {
+                            
+                            const marker = L.marker(hotel.coordinates)
+                                .addTo(map)
+                                .bindPopup(`
+                                    <div style="text-align: center;">
+                                        <h4>${hotel.name}</h4>
+                                        <p>${hotel.address}</p>
+                                        <strong>${hotel.price !== 'N/A' ? `€${hotel.price}/stay` : 'Price on request'}</strong><br>
+                                        ⭐ ${hotel.rating || 4.0}/5
+                                    </div>
+                                `);
+
+                            marker.on('click', () => {
+                                highlightHotelCard(index);
+                            });
+
+                            currentMarkers.push(marker);
+                        }
+                    });
+
+                    console.log(`✅ Added ${currentMarkers.length} markers to map`);
+                }
+
+            } catch (error) {
+                console.error('Error updating map:', error);
+            }
+        }
+
+        // Highlight hotel card when marker is clicked
+        function highlightHotelCard(index) {
+            try {
+                // Remove highlight from all cards
+                document.querySelectorAll('.hotel-card').forEach(card => 
+                    card.classList.remove('highlighted'));
+
+                // Highlight target card
+                if (currentHotels[index]) {
+                    const targetCard = document.querySelector(`[data-hotel-id="${currentHotels[index].id}"]`);
+                    if (targetCard) {
+                        targetCard.classList.add('highlighted');
+                        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            } catch (error) {
+                console.log('Error highlighting hotel card:', error);
+            }
+        }
+
+        // Hover effects for hotel cards
+        function showHotelOnMap(index) {
+            if (currentMarkers[index]) {
+                currentMarkers[index].openPopup();
+            }
+        }
+
+        function hideHotelOnMap(index) {
+            if (currentMarkers[index]) {
+                currentMarkers[index].closePopup();
+            }
+        }
 
         function initializePrivacyControls() {
             const acceptBtn = document.getElementById('analyticsAccept');
@@ -847,6 +1011,17 @@
             setDefaultDates();
             setupRoomTypeHandler();
             initializePrivacyControls();
+            
+            // Try to initialize map after a short delay
+            setTimeout(() => {
+                const mapReady = initializeMap();
+                if (!mapReady) {
+                    // If map fails, try again after 2 seconds
+                    setTimeout(() => {
+                        initializeMap();
+                    }, 2000);
+                }
+            }, 500);
             
             console.log('✅ STAYFINDR initialized successfully');
         }
@@ -999,6 +1174,7 @@
                     currentlyShowing = 5;
                     
                     displayHotels(data.hotels.slice(0, 5), data.city);
+                    updateMap(data.hotels.slice(0, 5));
                     
                     const loadMoreContainer = document.getElementById('loadMoreContainer');
                     if (loadMoreContainer) {
@@ -1063,6 +1239,7 @@
             currentlyShowing = nextBatch;
             
             displayHotels(hotelsToShow, '');
+            updateMap(hotelsToShow);
             updateLoadMoreButton();
             
             const statusEl = document.getElementById('connectionStatus');
@@ -1102,7 +1279,9 @@
                 const stars = '⭐'.repeat(Math.floor(hotel.rating || 4));
 
                 html += `
-                    <div class="hotel-card" data-hotel-id="${hotel.id}">
+                    <div class="hotel-card" data-hotel-id="${hotel.id}"
+                         onmouseover="showHotelOnMap(${index})" 
+                         onmouseout="hideHotelOnMap(${index})">
                         <div class="hotel-name">${hotel.name || 'Hotel'}</div>
                         <div class="hotel-details">📍 ${hotel.address || cityName}</div>
                         <div class="price-info">
