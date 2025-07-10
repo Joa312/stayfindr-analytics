@@ -102,17 +102,9 @@
             height: 600px;
             margin-bottom: 50px;
         }
-        .map-placeholder {     
+        #map {     
             border-radius: 15px;     
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 1.2rem;
-            text-align: center;
-            padding: 20px;
         }
         .hotels-panel {     
             background: rgba(255,255,255,0.95);     
@@ -427,8 +419,8 @@
                 height: auto !important;
                 gap: 15px !important;
             }
-            .map-placeholder {
-                height: 200px !important;
+            #map {
+                height: 300px !important;
                 margin-bottom: 15px !important;
             }
             .hotels-panel {
@@ -489,8 +481,8 @@
             .search-container {
                 padding: 15px !important;
             }
-            .map-placeholder {
-                height: 150px !important;
+            #map {
+                height: 250px !important;
             }
             .hotels-panel {
                 height: 400px !important;
@@ -585,10 +577,7 @@
         </div>
 
         <div class="main-content">
-            <div class="map-placeholder">
-                🏨 STAYFINDR<br>
-                <small>29 European Cities</small>
-            </div>
+            <div id="map"></div>
             <div class="hotels-panel">
                 <h3 id="hotelsTitle">Hotels</h3>
                 <div id="hotelsList">
@@ -770,7 +759,10 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        let map;
+        let currentMarkers = [];
         let currentHotels = [];
         let allHotelsData = [];
         let currentlyShowing = 5;
@@ -778,6 +770,90 @@
 
         // GDPR Analytics Management
         let analyticsEnabled = false;
+
+        // Wait for Leaflet to load properly with longer timeout
+        function waitForLeaflet() {
+            return new Promise((resolve) => {
+                function checkLeaflet() {
+                    if (typeof L !== 'undefined') {
+                        console.log('✅ Leaflet loaded successfully');
+                        resolve();
+                    } else {
+                        console.log('⏳ Waiting for Leaflet...');
+                        setTimeout(checkLeaflet, 2000); // 2 second timeout
+                    }
+                }
+                checkLeaflet();
+            });
+        }
+
+        function initMap() {
+            try {
+                if (typeof L !== 'undefined') {
+                    map = L.map('map').setView([59.3293, 18.0686], 6);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    console.log('🗺️ Map initialized successfully');
+                    trackEvent('map_initialized', {});
+                } else {
+                    console.log('Leaflet not ready, skipping map initialization');
+                }
+            } catch (error) {
+                console.error('Map initialization failed:', error);
+                trackEvent('map_error', { error: error.message });
+            }
+        }
+
+        function updateMap(hotels) {
+            if (!map || !hotels || hotels.length === 0) return;
+            
+            currentMarkers.forEach(marker => map.removeLayer(marker));
+            currentMarkers = [];
+
+            const center = hotels[0].coordinates;
+            if (center && center.length === 2) {
+                map.setView(center, 12);
+
+                hotels.forEach((hotel, index) => {
+                    if (hotel.coordinates && hotel.coordinates.length === 2) {
+                        const marker = L.marker(hotel.coordinates)
+                            .addTo(map)
+                            .bindPopup(`
+                                <b>${hotel.name}</b><br>
+                                ${hotel.price !== 'N/A' ? `€${hotel.price}/stay` : 'Price on request'}<br>
+                                ⭐ ${hotel.rating}/5
+                            `);
+
+                        marker.on('click', () => highlightHotelCard(index));
+                        currentMarkers.push(marker);
+                    }
+                });
+            }
+        }
+
+        function highlightMarker(index) {
+            if (currentMarkers[index]) {
+                currentMarkers[index].openPopup();
+            }
+        }
+
+        function unhighlightMarker(index) {
+            if (currentMarkers[index]) {
+                currentMarkers[index].closePopup();
+            }
+        }
+
+        function highlightHotelCard(index) {
+            document.querySelectorAll('.hotel-card').forEach(card => 
+                card.classList.remove('highlighted'));
+
+            const targetCard = document.querySelector(`[data-hotel-id="${currentHotels[index].id}"]`);
+            if (targetCard) {
+                targetCard.classList.add('highlighted');
+                targetCard.scrollIntoView({behavior: 'smooth', block: 'center'});
+            }
+        }
 
         function initializePrivacyControls() {
             const acceptBtn = document.getElementById('analyticsAccept');
@@ -839,7 +915,7 @@
         }
 
         // Initialize the application
-        function initializeApp() {
+        async function initializeApp() {
             console.log('🚀 Initializing STAYFINDR...');
             
             testBackendConnection();
@@ -847,6 +923,10 @@
             setDefaultDates();
             setupRoomTypeHandler();
             initializePrivacyControls();
+            
+            // Initialize map after waiting for Leaflet
+            await waitForLeaflet();
+            initMap();
             
             console.log('✅ STAYFINDR initialized successfully');
         }
@@ -999,6 +1079,7 @@
                     currentlyShowing = 5;
                     
                     displayHotels(data.hotels.slice(0, 5), data.city);
+                    updateMap(data.hotels.slice(0, 5));
                     
                     const loadMoreContainer = document.getElementById('loadMoreContainer');
                     if (loadMoreContainer) {
@@ -1063,6 +1144,7 @@
             currentlyShowing = nextBatch;
             
             displayHotels(hotelsToShow, '');
+            updateMap(hotelsToShow);
             updateLoadMoreButton();
             
             const statusEl = document.getElementById('connectionStatus');
@@ -1102,7 +1184,9 @@
                 const stars = '⭐'.repeat(Math.floor(hotel.rating || 4));
 
                 html += `
-                    <div class="hotel-card" data-hotel-id="${hotel.id}">
+                    <div class="hotel-card" data-hotel-id="${hotel.id}"
+                         onmouseover="highlightMarker(${index})" 
+                         onmouseout="unhighlightMarker(${index})">
                         <div class="hotel-name">${hotel.name || 'Hotel'}</div>
                         <div class="hotel-details">📍 ${hotel.address || cityName}</div>
                         <div class="price-info">
@@ -1123,9 +1207,9 @@
         }
 
         // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('📄 Page loaded, initializing STAYFINDR...');
-            initializeApp();
+            await initializeApp();
         });
     </script>
 </body>
