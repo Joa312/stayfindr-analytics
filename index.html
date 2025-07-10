@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>STAYFINDR - European Hotel Search</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
-          crossorigin=""/>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏨</text></svg>">
     <style>
         body {     
             font-family: 'Segoe UI', sans-serif;     
@@ -104,9 +102,17 @@
             height: 600px;
             margin-bottom: 50px;
         }
-        #map {     
+        .map-placeholder {     
             border-radius: 15px;     
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 20px;
         }
         .hotels-panel {     
             background: rgba(255,255,255,0.95);     
@@ -421,8 +427,8 @@
                 height: auto !important;
                 gap: 15px !important;
             }
-            #map {
-                height: 300px !important;
+            .map-placeholder {
+                height: 200px !important;
                 margin-bottom: 15px !important;
             }
             .hotels-panel {
@@ -483,8 +489,8 @@
             .search-container {
                 padding: 15px !important;
             }
-            #map {
-                height: 250px !important;
+            .map-placeholder {
+                height: 150px !important;
             }
             .hotels-panel {
                 height: 400px !important;
@@ -579,7 +585,10 @@
         </div>
 
         <div class="main-content">
-            <div id="map"></div>
+            <div class="map-placeholder">
+                🗺️ Interactive Map<br>
+                <small>Hotel locations will be displayed here</small>
+            </div>
             <div class="hotels-panel">
                 <h3 id="hotelsTitle">Hotels</h3>
                 <div id="hotelsList">
@@ -761,10 +770,7 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        let map;
-        let currentMarkers = [];
         let currentHotels = [];
         let allHotelsData = [];
         let currentlyShowing = 5;
@@ -829,24 +835,7 @@
             if (analyticsEnabled) {
                 console.log('Analytics Event:', eventName, eventData);
                 // Here you would send to your analytics service
-                // Example: gtag('event', eventName, eventData);
             }
-        }
-
-        // Wait for Leaflet to load properly
-        function waitForLeaflet() {
-            return new Promise((resolve) => {
-                function checkLeaflet() {
-                    if (typeof L !== 'undefined') {
-                        console.log('✅ Leaflet loaded successfully');
-                        resolve();
-                    } else {
-                        console.log('⏳ Waiting for Leaflet...');
-                        setTimeout(checkLeaflet, 3000);
-                    }
-                }
-                checkLeaflet();
-            });
         }
 
         // Initialize the application
@@ -854,7 +843,6 @@
             console.log('🚀 Initializing STAYFINDR...');
             
             testBackendConnection();
-            initMap();
             setupEventListeners();
             setDefaultDates();
             setupRoomTypeHandler();
@@ -868,30 +856,22 @@
                 const response = await fetch(BACKEND_URL + '/api/cities');
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById('connectionStatus').innerHTML = `✅ Backend ready! ${data.total} cities available with room filtering`;
-                    document.getElementById('connectionStatus').className = 'status success-indicator';
+                    const statusEl = document.getElementById('connectionStatus');
+                    if (statusEl) {
+                        statusEl.innerHTML = `✅ Backend ready! ${data.total} cities available with room filtering`;
+                        statusEl.className = 'status success-indicator';
+                    }
                     trackEvent('backend_connected', { cities: data.total });
                 } else {
                     throw new Error('Backend not responding');
                 }
             } catch (error) {
-                document.getElementById('connectionStatus').innerHTML = '❌ Backend offline - Check connection';
-                document.getElementById('connectionStatus').className = 'status error';
+                const statusEl = document.getElementById('connectionStatus');
+                if (statusEl) {
+                    statusEl.innerHTML = '❌ Backend offline - Check connection';
+                    statusEl.className = 'status error';
+                }
                 trackEvent('backend_error', { error: error.message });
-            }
-        }
-
-        function initMap() {
-            try {
-                map = L.map('map').setView([59.3293, 18.0686], 6);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
-                }).addTo(map);
-                console.log('🗺️ Map initialized successfully');
-                trackEvent('map_initialized', {});
-            } catch (error) {
-                console.error('Map initialization failed:', error);
-                trackEvent('map_error', { error: error.message });
             }
         }
 
@@ -947,16 +927,34 @@
             const today = new Date();
             const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
             
-            document.getElementById('checkin').value = today.toISOString().split('T')[0];
-            document.getElementById('checkout').value = tomorrow.toISOString().split('T')[0];
+            const checkinEl = document.getElementById('checkin');
+            const checkoutEl = document.getElementById('checkout');
+            
+            if (checkinEl) {
+                checkinEl.value = today.toISOString().split('T')[0];
+            }
+            if (checkoutEl) {
+                checkoutEl.value = tomorrow.toISOString().split('T')[0];
+            }
         }
 
         async function searchHotels() {
-            const city = document.getElementById('city').value;
-            const roomType = document.getElementById('roomType').value;
-            const checkin = document.getElementById('checkin').value;
-            const checkout = document.getElementById('checkout').value;
-            const guests = document.getElementById('guests').value;
+            const cityEl = document.getElementById('city');
+            const roomTypeEl = document.getElementById('roomType');
+            const checkinEl = document.getElementById('checkin');
+            const checkoutEl = document.getElementById('checkout');
+            const guestsEl = document.getElementById('guests');
+
+            if (!cityEl || !roomTypeEl || !checkinEl || !checkoutEl || !guestsEl) {
+                console.error('Form elements not found');
+                return;
+            }
+
+            const city = cityEl.value;
+            const roomType = roomTypeEl.value;
+            const checkin = checkinEl.value;
+            const checkout = checkoutEl.value;
+            const guests = guestsEl.value;
 
             console.log(`🔍 Searching hotels: ${city}, ${roomType}, ${checkin} to ${checkout}, ${guests} guests`);
 
@@ -964,10 +962,18 @@
             const hotelsList = document.getElementById('hotelsList');
             const hotelsTitle = document.getElementById('hotelsTitle');
 
-            searchButton.disabled = true;
-            searchButton.innerHTML = '⏳ Searching...';
-            hotelsList.innerHTML = '<div class="loading">🔍 Searching real hotels from Booking.com...</div>';
-            hotelsTitle.innerHTML = `Hotels in ${city}`;
+            if (searchButton) {
+                searchButton.disabled = true;
+                searchButton.innerHTML = '⏳ Searching...';
+            }
+            
+            if (hotelsList) {
+                hotelsList.innerHTML = '<div class="loading">🔍 Searching real hotels from Booking.com...</div>';
+            }
+            
+            if (hotelsTitle) {
+                hotelsTitle.innerHTML = `Hotels in ${city}`;
+            }
 
             trackEvent('hotel_search_started', { 
                 city: city, 
@@ -993,19 +999,22 @@
                     currentlyShowing = 5;
                     
                     displayHotels(data.hotels.slice(0, 5), data.city);
-                    updateMap(data.hotels.slice(0, 5));
                     
                     const loadMoreContainer = document.getElementById('loadMoreContainer');
-                    if (data.hotels.length > 5) {
-                        loadMoreContainer.style.display = 'block';
-                        updateLoadMoreButton();
-                    } else {
-                        loadMoreContainer.style.display = 'none';
+                    if (loadMoreContainer) {
+                        if (data.hotels.length > 5) {
+                            loadMoreContainer.style.display = 'block';
+                            updateLoadMoreButton();
+                        } else {
+                            loadMoreContainer.style.display = 'none';
+                        }
                     }
                     
-                    document.getElementById('connectionStatus').innerHTML = 
-                        `✅ Found ${data.total_found} real hotels in ${data.city}! (Showing ${Math.min(5, data.hotels.length)})`;
-                    document.getElementById('connectionStatus').className = 'status success-indicator';
+                    const statusEl = document.getElementById('connectionStatus');
+                    if (statusEl) {
+                        statusEl.innerHTML = `✅ Found ${data.total_found || data.hotels.length} real hotels in ${data.city}! (Showing ${Math.min(5, data.hotels.length)})`;
+                        statusEl.className = 'status success-indicator';
+                    }
 
                     trackEvent('hotel_search_success', { 
                         city: city, 
@@ -1013,17 +1022,27 @@
                         roomType: roomType
                     });
                 } else {
-                    hotelsList.innerHTML = '<div class="error">No hotels found for this city and dates.</div>';
-                    document.getElementById('loadMoreContainer').style.display = 'none';
+                    if (hotelsList) {
+                        hotelsList.innerHTML = '<div class="error">No hotels found for this city and dates.</div>';
+                    }
+                    const loadMoreContainer = document.getElementById('loadMoreContainer');
+                    if (loadMoreContainer) {
+                        loadMoreContainer.style.display = 'none';
+                    }
                     trackEvent('hotel_search_no_results', { city: city, roomType: roomType });
                 }
 
             } catch (error) {
                 console.error('Search error:', error);
-                hotelsList.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                if (hotelsList) {
+                    hotelsList.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                }
                 
-                document.getElementById('connectionStatus').innerHTML = '❌ Search failed - Check backend connection';
-                document.getElementById('connectionStatus').className = 'status error';
+                const statusEl = document.getElementById('connectionStatus');
+                if (statusEl) {
+                    statusEl.innerHTML = '❌ Search failed - Check backend connection';
+                    statusEl.className = 'status error';
+                }
                 
                 trackEvent('hotel_search_error', { 
                     city: city, 
@@ -1031,8 +1050,10 @@
                 });
             }
 
-            searchButton.disabled = false;
-            searchButton.innerHTML = '🔍 Search Hotels';
+            if (searchButton) {
+                searchButton.disabled = false;
+                searchButton.innerHTML = '🔍 Search Hotels';
+            }
         }
 
         function showMoreHotels() {
@@ -1042,11 +1063,12 @@
             currentlyShowing = nextBatch;
             
             displayHotels(hotelsToShow, '');
-            updateMap(hotelsToShow);
             updateLoadMoreButton();
             
-            document.getElementById('connectionStatus').innerHTML = 
-                `✅ Showing ${currentlyShowing} of ${allHotelsData.length} hotels`;
+            const statusEl = document.getElementById('connectionStatus');
+            if (statusEl) {
+                statusEl.innerHTML = `✅ Showing ${currentlyShowing} of ${allHotelsData.length} hotels`;
+            }
 
             trackEvent('show_more_hotels', { 
                 totalShowing: currentlyShowing,
@@ -1058,11 +1080,13 @@
             const loadMoreBtn = document.getElementById('loadMoreBtn');
             const loadMoreContainer = document.getElementById('loadMoreContainer');
             
-            if (currentlyShowing >= allHotelsData.length) {
-                loadMoreContainer.style.display = 'none';
-            } else {
-                const remaining = allHotelsData.length - currentlyShowing;
-                loadMoreBtn.innerHTML = `📋 Show ${Math.min(5, remaining)} More Hotels (${remaining} remaining)`;
+            if (loadMoreBtn && loadMoreContainer) {
+                if (currentlyShowing >= allHotelsData.length) {
+                    loadMoreContainer.style.display = 'none';
+                } else {
+                    const remaining = allHotelsData.length - currentlyShowing;
+                    loadMoreBtn.innerHTML = `📋 Show ${Math.min(5, remaining)} More Hotels (${remaining} remaining)`;
+                }
             }
         }
 
@@ -1070,23 +1094,23 @@
             currentHotels = hotels;
             const hotelsList = document.getElementById('hotelsList');
 
+            if (!hotelsList) return;
+
             let html = '';
             hotels.forEach((hotel, index) => {
-                ${hotel.price !== 'N/A' ? `€${hotel.price}/stay` : 'Price on request'}<br> !== 'N/A' ? `€${hotel.price}/stay` : 'Price on request';
-                const stars = '⭐'.repeat(Math.floor(hotel.rating));
+                const priceDisplay = hotel.price !== 'N/A' ? `€${hotel.price}/stay` : 'Price on request';
+                const stars = '⭐'.repeat(Math.floor(hotel.rating || 4));
 
                 html += `
-                    <div class="hotel-card" data-hotel-id="${hotel.id}" 
-                         onmouseover="highlightMarker(${index})" 
-                         onmouseout="unhighlightMarker(${index})">
-                        <div class="hotel-name">${hotel.name}</div>
-                        <div class="hotel-details">📍 ${hotel.address}</div>
+                    <div class="hotel-card" data-hotel-id="${hotel.id}">
+                        <div class="hotel-name">${hotel.name || 'Hotel'}</div>
+                        <div class="hotel-details">📍 ${hotel.address || cityName}</div>
                         <div class="price-info">
                             <span class="price">${priceDisplay}</span>
-                            <span class="rating">${stars} ${hotel.rating}/5</span>
+                            <span class="rating">${stars} ${hotel.rating || 4.0}/5</span>
                         </div>
                         <div class="hotel-actions">
-                            <a href="${hotel.booking_url}" target="_blank" class="action-btn book-btn" 
+                            <a href="${hotel.booking_url || '#'}" target="_blank" class="action-btn book-btn" 
                                onclick="trackEvent('booking_click', { hotelName: '${hotel.name}', price: '${hotel.price}' })">
                                 Book on Booking.com
                             </a>
@@ -1098,56 +1122,9 @@
             hotelsList.innerHTML = html;
         }
 
-        function updateMap(hotels) {
-            currentMarkers.forEach(marker => map.removeLayer(marker));
-            currentMarkers = [];
-
-            if (hotels.length > 0) {
-                const center = hotels[0].coordinates;
-                map.setView(center, 12);
-
-                hotels.forEach((hotel, index) => {
-                    const marker = L.marker(hotel.coordinates)
-                        .addTo(map)
-                        .bindPopup(`
-                            <b>${hotel.name}</b><br>
-                            ${hotel.price !== 'N/A' ? `€${hotel.price}/night` : 'Price on request'}<br>
-                            ⭐ ${hotel.rating}/5
-                        `);
-
-                    marker.on('click', () => highlightHotelCard(index));
-                    currentMarkers.push(marker);
-                });
-            }
-        }
-
-        function highlightMarker(index) {
-            if (currentMarkers[index]) {
-                currentMarkers[index].openPopup();
-            }
-        }
-
-        function unhighlightMarker(index) {
-            if (currentMarkers[index]) {
-                currentMarkers[index].closePopup();
-            }
-        }
-
-        function highlightHotelCard(index) {
-            document.querySelectorAll('.hotel-card').forEach(card => 
-                card.classList.remove('highlighted'));
-
-            const targetCard = document.querySelector(`[data-hotel-id="${currentHotels[index].id}"]`);
-            if (targetCard) {
-                targetCard.classList.add('highlighted');
-                targetCard.scrollIntoView({behavior: 'smooth', block: 'center'});
-            }
-        }
-
         // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('📄 Page loaded, waiting for Leaflet...');
-            await waitForLeaflet();
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 Page loaded, initializing STAYFINDR...');
             initializeApp();
         });
     </script>
