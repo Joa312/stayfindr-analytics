@@ -101,7 +101,8 @@
             display: grid;     
             grid-template-columns: 1fr 400px;     
             gap: 30px;     
-            height: 600px;     
+            height: 600px;
+            margin-bottom: 50px;
         }
         #map {     
             border-radius: 15px;     
@@ -209,6 +210,185 @@
             text-align: center;
         }
 
+        /* Content Sections */
+        .content-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 30px 0;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .content-section h2 {
+            color: #2c3e50;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .content-section h3 {
+            color: #3498db;
+            font-size: 1.4rem;
+            margin: 25px 0 15px 0;
+        }
+        .content-section p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .feature-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .feature-description {
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .step-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+        }
+        .step-number {
+            background: rgba(255,255,255,0.2);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 20px auto;
+        }
+        .step-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .step-description {
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        /* GDPR/Analytics Section */
+        .gdpr-section {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        .gdpr-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .gdpr-section p {
+            color: #6c757d;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .privacy-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .privacy-btn {
+            padding: 8px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            background: white;
+            color: #495057;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+        .privacy-btn:hover {
+            background: #e9ecef;
+        }
+        .privacy-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        /* Footer */
+        .footer {
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 40px 0;
+            margin-top: 50px;
+            border-radius: 20px 20px 0 0;
+        }
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .footer-section h4 {
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        .footer-section p, .footer-section li {
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        .footer-section a {
+            color: #3498db;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .footer-section a:hover {
+            color: #5dade2;
+        }
+        .footer-bottom {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+            color: #888;
+        }
+
         /* Mobile fixes */
         @media (max-width: 768px) {
             body {
@@ -275,6 +455,24 @@
             .status {
                 font-size: 0.9rem !important;
                 padding: 8px !important;
+            }
+            .content-section {
+                padding: 25px !important;
+            }
+            .content-section h2 {
+                font-size: 1.8rem !important;
+            }
+            .features-grid {
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
+            }
+            .steps-container {
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
+            }
+            .footer-content {
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
             }
         }
 
@@ -394,6 +592,173 @@
                 </div>
             </div>
         </div>
+
+        <!-- About STAYFINDR Section -->
+        <div class="content-section">
+            <h2>About STAYFINDR</h2>
+            <p>STAYFINDR is your ultimate European hotel search companion, connecting you directly to real-time hotel prices from Booking.com across 29 major European destinations. Whether you're planning a romantic getaway in Paris, a business trip to London, or a family vacation in Barcelona, we make finding the perfect accommodation effortless.</p>
+            
+            <p>Our platform specializes in European travel, offering localized search results with native language booking pages. From budget-friendly hostels to luxury Junior Suites, we help you discover accommodations that match your style and budget.</p>
+
+            <h3>Why Choose STAYFINDR?</h3>
+            <p>Unlike generic hotel search engines, STAYFINDR focuses exclusively on Europe, providing:</p>
+            <ul>
+                <li><strong>Real-time Booking.com integration</strong> - Live prices and availability</li>
+                <li><strong>Localized experience</strong> - Spanish bookings for Palma, French for Paris, etc.</li>
+                <li><strong>Smart room filtering</strong> - Including exclusive Junior Suite options</li>
+                <li><strong>Mobile-optimized design</strong> - Perfect for travel planning on-the-go</li>
+                <li><strong>No hidden fees</strong> - Transparent pricing directly from hotels</li>
+            </ul>
+        </div>
+
+        <!-- How It Works Section -->
+        <div class="content-section">
+            <h2>How It Works</h2>
+            <p>Finding your perfect European hotel is just three simple steps away:</p>
+
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Choose Your Destination</div>
+                    <div class="step-description">Select from 29 major European cities, from Stockholm to Santorini. Each destination offers unique local experiences.</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Filter Your Preferences</div>
+                    <div class="step-description">Pick your room type (including Junior Suites), travel dates, and number of guests. Our smart system auto-adjusts recommendations.</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Book Directly</div>
+                    <div class="step-description">Browse real-time results with photos, ratings, and prices. Click to book directly on Booking.com with your local language.</div>
+                </div>
+            </div>
+
+            <p style="text-align: center; margin-top: 30px;"><strong>Start your European adventure today - it takes less than 2 minutes to find your perfect hotel!</strong></p>
+        </div>
+
+        <!-- Features Section -->
+        <div class="content-section">
+            <h2>Features & Benefits</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <div class="feature-title">29 European Cities</div>
+                    <div class="feature-description">From Nordic capitals to Mediterranean islands, covering all major European destinations with local expertise.</div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🏨</div>
+                    <div class="feature-title">Junior Suite Specialty</div>
+                    <div class="feature-description">Exclusive focus on premium room types including Junior Suites - perfect for special occasions and business travel.</div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <div class="feature-title">Real-Time Pricing</div>
+                    <div class="feature-description">Live integration with Booking.com ensures you see current prices and availability, no outdated information.</div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🗺️</div>
+                    <div class="feature-title">Interactive Maps</div>
+                    <div class="feature-description">Visual hotel locations with detailed maps help you choose accommodations in your preferred neighborhoods.</div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-title">Mobile Optimized</div>
+                    <div class="feature-description">Responsive design works perfectly on all devices - plan your trip anywhere, anytime.</div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-title">Privacy Focused</div>
+                    <div class="feature-description">GDPR-compliant with transparent data handling and optional analytics - your privacy matters.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GDPR/Analytics Section -->
+        <div class="content-section">
+            <div class="gdpr-section">
+                <h3>🛡️ Privacy & Analytics Information</h3>
+                <p><strong>Your Privacy Matters:</strong> STAYFINDR is committed to protecting your personal data in compliance with GDPR regulations. We use minimal analytics to improve our service quality.</p>
+                
+                <p><strong>What we collect:</strong></p>
+                <ul>
+                    <li>Basic usage statistics (anonymous)</li>
+                    <li>Search preferences to improve recommendations</li>
+                    <li>Technical data for performance optimization</li>
+                </ul>
+
+                <p><strong>What we DON'T collect:</strong></p>
+                <ul>
+                    <li>Personal identification information</li>
+                    <li>Payment or booking details (handled by Booking.com)</li>
+                    <li>Location tracking outside of hotel searches</li>
+                </ul>
+
+                <div class="privacy-controls">
+                    <button class="privacy-btn active" id="analyticsAccept">Accept Analytics</button>
+                    <button class="privacy-btn" id="analyticsDecline">Decline Analytics</button>
+                    <button class="privacy-btn" id="privacySettings">Privacy Settings</button>
+                </div>
+
+                <p style="margin-top: 15px; font-size: 0.8rem; color: #6c757d;">
+                    <strong>Cookie Notice:</strong> We use essential cookies for functionality and optional analytics cookies to improve user experience. You can manage your preferences using the controls above.
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>STAYFINDR</h4>
+                    <p>Your trusted companion for European hotel search. Connecting travelers with perfect accommodations across 29 major destinations.</p>
+                    <p><strong>Mission:</strong> Making European travel planning effortless with real-time hotel data and localized booking experiences.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#search">Hotel Search</a></li>
+                        <li><a href="#about">About STAYFINDR</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#privacy">Privacy Policy</a></li>
+                        <li><a href="#contact">Contact Us</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Popular Destinations</h4>
+                    <ul>
+                        <li><a href="#paris">Paris Hotels</a></li>
+                        <li><a href="#london">London Hotels</a></li>
+                        <li><a href="#barcelona">Barcelona Hotels</a></li>
+                        <li><a href="#rome">Rome Hotels</a></li>
+                        <li><a href="#amsterdam">Amsterdam Hotels</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Contact & Support</h4>
+                    <p><strong>Technical Support:</strong><br>support@stayfindr.com</p>
+                    <p><strong>Business Inquiries:</strong><br>partnerships@stayfindr.com</p>
+                    <p><strong>Response Time:</strong><br>24-48 hours</p>
+                    <p><strong>Service Coverage:</strong><br>29 European Cities</p>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 STAYFINDR. All rights reserved. | Powered by Booking.com API | Built with 💙 for European travelers</p>
+                <p>STAYFINDR is an independent hotel search platform. We are not affiliated with Booking.com but use their API for real-time hotel data.</p>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -404,6 +769,69 @@
         let allHotelsData = [];
         let currentlyShowing = 5;
         const BACKEND_URL = 'https://actionly.onrender.com';
+
+        // GDPR Analytics Management
+        let analyticsEnabled = false;
+
+        function initializePrivacyControls() {
+            const acceptBtn = document.getElementById('analyticsAccept');
+            const declineBtn = document.getElementById('analyticsDecline');
+            const settingsBtn = document.getElementById('privacySettings');
+
+            if (acceptBtn) {
+                acceptBtn.addEventListener('click', function() {
+                    analyticsEnabled = true;
+                    updatePrivacyButtons();
+                    console.log('Analytics enabled by user');
+                });
+            }
+
+            if (declineBtn) {
+                declineBtn.addEventListener('click', function() {
+                    analyticsEnabled = false;
+                    updatePrivacyButtons();
+                    console.log('Analytics declined by user');
+                });
+            }
+
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', function() {
+                    alert('Privacy Settings:\n\n• Essential cookies: Always enabled (required for functionality)\n• Analytics cookies: ' + (analyticsEnabled ? 'Enabled' : 'Disabled') + '\n• No personal data collection\n• GDPR compliant');
+                });
+            }
+
+            // Check existing preference
+            const savedPreference = localStorage.getItem('stayfindr_analytics');
+            if (savedPreference === 'enabled') {
+                analyticsEnabled = true;
+                updatePrivacyButtons();
+            }
+        }
+
+        function updatePrivacyButtons() {
+            const acceptBtn = document.getElementById('analyticsAccept');
+            const declineBtn = document.getElementById('analyticsDecline');
+
+            if (acceptBtn && declineBtn) {
+                if (analyticsEnabled) {
+                    acceptBtn.classList.add('active');
+                    declineBtn.classList.remove('active');
+                    localStorage.setItem('stayfindr_analytics', 'enabled');
+                } else {
+                    acceptBtn.classList.remove('active');
+                    declineBtn.classList.add('active');
+                    localStorage.setItem('stayfindr_analytics', 'declined');
+                }
+            }
+        }
+
+        function trackEvent(eventName, eventData) {
+            if (analyticsEnabled) {
+                console.log('Analytics Event:', eventName, eventData);
+                // Here you would send to your analytics service
+                // Example: gtag('event', eventName, eventData);
+            }
+        }
 
         // Wait for Leaflet to load properly
         function waitForLeaflet() {
@@ -430,6 +858,7 @@
             setupEventListeners();
             setDefaultDates();
             setupRoomTypeHandler();
+            initializePrivacyControls();
             
             console.log('✅ STAYFINDR initialized successfully');
         }
@@ -441,12 +870,14 @@
                     const data = await response.json();
                     document.getElementById('connectionStatus').innerHTML = `✅ Backend ready! ${data.total} cities available with room filtering`;
                     document.getElementById('connectionStatus').className = 'status success-indicator';
+                    trackEvent('backend_connected', { cities: data.total });
                 } else {
                     throw new Error('Backend not responding');
                 }
             } catch (error) {
                 document.getElementById('connectionStatus').innerHTML = '❌ Backend offline - Check connection';
                 document.getElementById('connectionStatus').className = 'status error';
+                trackEvent('backend_error', { error: error.message });
             }
         }
 
@@ -457,8 +888,10 @@
                     attribution: '© OpenStreetMap contributors'
                 }).addTo(map);
                 console.log('🗺️ Map initialized successfully');
+                trackEvent('map_initialized', {});
             } catch (error) {
                 console.error('Map initialization failed:', error);
+                trackEvent('map_error', { error: error.message });
             }
         }
 
@@ -504,6 +937,8 @@
                             guestsSelect.value = '3';
                             break;
                     }
+
+                    trackEvent('room_type_selected', { roomType: roomType });
                 });
             }
         }
@@ -533,6 +968,12 @@
             searchButton.innerHTML = '⏳ Searching...';
             hotelsList.innerHTML = '<div class="loading">🔍 Searching real hotels from Booking.com...</div>';
             hotelsTitle.innerHTML = `Hotels in ${city}`;
+
+            trackEvent('hotel_search_started', { 
+                city: city, 
+                roomType: roomType, 
+                guests: guests 
+            });
 
             try {
                 const response = await fetch(`${BACKEND_URL}/api/hotels?city=${city}&room_type=${roomType}&checkin=${checkin}&checkout=${checkout}&adults=${guests}&rooms=1`);
@@ -565,9 +1006,16 @@
                     document.getElementById('connectionStatus').innerHTML = 
                         `✅ Found ${data.total_found} real hotels in ${data.city}! (Showing ${Math.min(5, data.hotels.length)})`;
                     document.getElementById('connectionStatus').className = 'status success-indicator';
+
+                    trackEvent('hotel_search_success', { 
+                        city: city, 
+                        hotelsFound: data.hotels.length,
+                        roomType: roomType
+                    });
                 } else {
                     hotelsList.innerHTML = '<div class="error">No hotels found for this city and dates.</div>';
                     document.getElementById('loadMoreContainer').style.display = 'none';
+                    trackEvent('hotel_search_no_results', { city: city, roomType: roomType });
                 }
 
             } catch (error) {
@@ -576,6 +1024,11 @@
                 
                 document.getElementById('connectionStatus').innerHTML = '❌ Search failed - Check backend connection';
                 document.getElementById('connectionStatus').className = 'status error';
+                
+                trackEvent('hotel_search_error', { 
+                    city: city, 
+                    error: error.message 
+                });
             }
 
             searchButton.disabled = false;
@@ -594,6 +1047,11 @@
             
             document.getElementById('connectionStatus').innerHTML = 
                 `✅ Showing ${currentlyShowing} of ${allHotelsData.length} hotels`;
+
+            trackEvent('show_more_hotels', { 
+                totalShowing: currentlyShowing,
+                totalAvailable: allHotelsData.length
+            });
         }
 
         function updateLoadMoreButton() {
@@ -628,7 +1086,8 @@
                             <span class="rating">${stars} ${hotel.rating}/5</span>
                         </div>
                         <div class="hotel-actions">
-                            <a href="${hotel.booking_url}" target="_blank" class="action-btn book-btn">
+                            <a href="${hotel.booking_url}" target="_blank" class="action-btn book-btn" 
+                               onclick="trackEvent('booking_click', { hotelName: '${hotel.name}', price: '${hotel.price}' })">
                                 Book on Booking.com
                             </a>
                         </div>
