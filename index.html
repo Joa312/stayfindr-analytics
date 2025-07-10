@@ -196,11 +196,12 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
         .search-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-    gap: 12px;
-    align-items: end;
-}
+            display: grid;
+            grid-template-columns: 200px 200px 200px 180px 180px 120px 140px;
+            gap: 15px;
+            align-items: end;
+            justify-content: center;
+        }
         .form-group {
             display: flex;
             flex-direction: column;
@@ -239,18 +240,6 @@
             background: #95a5a6;
             cursor: not-allowed;
             transform: none;
-        }
-        .room-type-hint {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-            margin-top: 5px;
-            min-height: 20px;
-        }
-        .sort-hint {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-            margin-top: 5px;
-            min-height: 20px;
         }
         .main-content {     
             display: grid;     
@@ -650,7 +639,6 @@
                         <option value="junior_suite">Junior Suite (2 guests)</option>
                         <option value="suite">Suite/Apartment (2-4 guests)</option>
                     </select>
-                    <div class="room-type-hint" id="roomTypeHint">Ideal for couples</div>
                 </div>
                 <div class="form-group">
                     <label for="sortBy">Sort By</label>
@@ -662,7 +650,6 @@
                         <option value="distance">Closest to Center</option>
                         <option value="newest">Newest Hotels</option>
                     </select>
-                    <div class="sort-hint" id="sortHint">Best value for money</div>
                 </div>
                 <div class="form-group">
                     <label for="checkin">Check-in</label>
@@ -762,25 +749,6 @@
             essential: true
         };
 
-        // Room type descriptions for UI feedback
-        const roomTypeDescriptions = {
-            'single': 'Perfect for solo travelers - Ready to search!',
-            'double': 'Ideal for couples - Ready to search!',
-            'family': 'Spacious accommodation for families - Ready to search!',
-            'junior_suite': 'Spacious room with sitting area - Ready to search!',
-            'suite': 'Luxury accommodation with separate living area - Ready to search!'
-        };
-
-        // Sort descriptions for UI feedback
-        const sortDescriptions = {
-            'popularity': 'Best value for money',
-            'price_low': 'Budget-friendly options first',
-            'price_high': 'Luxury options first',
-            'rating': 'Top-rated hotels first',
-            'distance': 'Closest to city center',
-            'newest': 'Recently opened hotels'
-        };
-
         // Cookie Management Functions
         function checkCookieConsent() {
             const consent = localStorage.getItem('stayfindr_cookie_consent');
@@ -854,12 +822,6 @@
             
             console.log('📊 Analytics enabled - tracking user interactions');
             
-            // Initialize session tracking
-            if (!sessionStorage.getItem('stayfindr_session_id')) {
-                const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                sessionStorage.setItem('stayfindr_session_id', sessionId);
-            }
-
             // Track page view
             trackEvent('page_view', {
                 url: window.location.href,
@@ -950,7 +912,7 @@
 
         // Initialize the application
         function initializeApp() {
-            console.log('🚀 Initializing STAYFINDR with GDPR-compliant analytics and sorting...');
+            console.log('🚀 Initializing STAYFINDR with clean interface...');
             
             testBackendConnection();
             initMap();
@@ -1039,9 +1001,8 @@
             // Room type change handler with smart guest updating
             const roomTypeSelect = document.getElementById('roomType');
             const guestsSelect = document.getElementById('guests');
-            const roomTypeHint = document.getElementById('roomTypeHint');
 
-            if (roomTypeSelect && guestsSelect && roomTypeHint) {
+            if (roomTypeSelect && guestsSelect) {
                 roomTypeSelect.addEventListener('change', function() {
                     const roomType = this.value;
                     
@@ -1069,17 +1030,12 @@
                             guestsSelect.value = '3';
                             break;
                     }
-                    
-                    // Update hint text
-                    roomTypeHint.textContent = roomTypeDescriptions[roomType] || 'Ready to search!';
                 });
             }
 
-            // Sort change handler with hint updates
+            // Sort change handler
             const sortSelect = document.getElementById('sortBy');
-            const sortHint = document.getElementById('sortHint');
-
-            if (sortSelect && sortHint) {
+            if (sortSelect) {
                 sortSelect.addEventListener('change', function() {
                     const sortType = this.value;
                     
@@ -1087,9 +1043,6 @@
                     trackEvent('sort_change', {
                         sort_type: sortType
                     });
-                    
-                    // Update hint text
-                    sortHint.textContent = sortDescriptions[sortType] || 'Custom sorting applied';
                 });
             }
         }
@@ -1161,9 +1114,8 @@
                     }
                     
                     const nights = data.search_params.nights || 1;
-                    const sortInfo = sortDescriptions[sortBy] || 'Custom sorting';
                     document.getElementById('connectionStatus').innerHTML = 
-                        `✅ Found ${data.total_found} hotels in ${data.city}! Sorted by: ${sortInfo} (${Math.min(5, data.hotels.length)} displayed)`;
+                        `✅ Found ${data.total_found} hotels in ${data.city}! (${Math.min(5, data.hotels.length)} displayed)`;
                     document.getElementById('connectionStatus').className = 'status success-indicator';
 
                     // Track successful search
@@ -1384,7 +1336,7 @@
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('📄 Page loaded, initializing STAYFINDR with sorting...');
+            console.log('📄 Page loaded, initializing clean STAYFINDR...');
             
             // Try multiple loading strategies
             await loadLeafletDynamically();
@@ -1393,4 +1345,10 @@
         });
     </script>
 </body>
-</html>
+</html> Initialize session tracking
+            if (!sessionStorage.getItem('stayfindr_session_id')) {
+                const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('stayfindr_session_id', sessionId);
+            }
+
+            //
