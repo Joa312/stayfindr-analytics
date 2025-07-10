@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>STAYFINDR - European Hotel Search</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <style>
+        body {     
+            font-family: 'Segoe UI', sans-serif;     
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0; padding: 20px; min-height: 100vh;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        .header h1 {   
+            font-size: 3rem;   
+            font-weight: 700;   
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p { font-size: 1.2rem; opacity: 0.9; }
+        .status { text-align: center; color: white; margin-bottom: 20px; }
+        
+        /* GDPR Cookie Banner */
+        .cookie-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+            padding: 20px;
+            z-index: 10000;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            display: none;
+        }
+        .cookie-banner.show {
+            display: block;
+        }
+        .cookie-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .cookie-text {
+            flex: 1;
+            min-width: 300px;
+        }
+        .cookie-text h3 {
+            margin: 0 0 10px 0;
+            color: #3498db;
+        }
+        .cookie-text p {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .cookie-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .cookie-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .cookie-accept {
+            background: #27ae60;
+            color: white;
+        }
+        .cookie-accept:hover {
+            background: #229954;
+        }
+        .cookie-decline {
+            background: #95a5a6;
+            color: white;
+        }
+        .cookie-decline:hover {
+            background: #7f8c8d;
+        }
+        .cookie-settings {
+            background: #3498db;
+            color: white;
+        }
+        .cookie-settings:hover {
+            background: #2980b9;
+        }
+
+        /* Cookie Settings Modal */
+        .cookie-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 10001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .cookie-modal.show {
+            display: flex;
+        }
+        .cookie-modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            margin: 20px;
+        }
+        .cookie-modal h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .cookie-category {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
+        }
+        .cookie-category h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cookie-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 25px;
+        }
+        .cookie-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .cookie-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 25px;
+        }
+        .cookie-slider:before {
+            position: absolute;
+            content: "";
+            height: 19px;
+            width: 19px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .cookie-slider {
+            background-color: #27ae60;
+        }
+        input:checked + .cookie-slider:before {
+            transform: translateX(25px);
+        }
+        .cookie-category p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .cookie-modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .search-container {     
+            background: rgba(255,255,255,0.95);     
+            border-radius: 20px; padding: 30px; margin-bottom: 30px;     
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .form-group select, .form-group input {
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-group select:focus, .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .search-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+        .search-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .room-type-hint {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+            min-height: 20px;
+        }
+        .main-content {     
+            display: grid;     
+            grid-template-columns: 1fr 400px;     
+            gap: 30px;     
+            height: 600px;     
+        }
+        #map {     
+            border-radius: 15px;     
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        .hotels-panel {     
+            background: rgba(255,255,255,0.95);     
+            border-radius: 15px;     
+            padding: 25px;     
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .hotels-panel h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .hotel-card {     
+            background: white;     
+            border-radius: 10px;     
+            padding: 15px;     
+            margin: 10px 0;     
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .hotel-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .hotel-card.highlighted {
+            border: 2px solid #3498db;
+            background: #f8f9fa;
+        }
+        .hotel-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+        .hotel-details {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        .price-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .price {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #27ae60;
+        }
+        .rating {
+            color: #f39c12;
+            font-weight: 500;
+        }
+        .room-info {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+        .hotel-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .action-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .book-btn {
+            background: #27ae60;
+            color: white;
+            flex: 1;
+        }
+        .book-btn:hover {
+            background: #229954;
+        }
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 20px;
+        }
+        .error {
+            text-align: center;
+            color: #e74c3c;
+            padding: 20px;
+            background: #fdf2f2;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .success-indicator {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .retry-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .retry-btn:hover {
+            background: #2980b9;
+        }
+
+        /* Terms and About Sections */
+        .terms-section, .about-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .terms-section h2, .about-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .terms-content, .about-content {
+            color: #555;
+            line-height: 1.6;
+        }
+        .terms-content h3, .about-content h3 {
+            color: #2c3e50;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .terms-content p, .about-content p {
+            margin-bottom: 15px;
+        }
+        .contact-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #27ae60;
+            margin-top: 20px;
+        }
+        .contact-info h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .contact-info a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        /* Mobile fixes */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px !important;
+            }
+            .container {
+                padding: 5px !important;
+            }
+            .header h1 {
+                font-size: 2.5rem !important;
+            }
+            .header p {
+                font-size: 1rem !important;
+            }
+            .search-container {
+                padding: 20px !important;
+                margin-bottom: 15px !important;
+            }
+            .search-form {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+            .form-group select, .form-group input, .search-btn {
+                min-height: 44px !important;
+                font-size: 16px !important;
+                padding: 12px !important;
+            }
+            .main-content {
+                grid-template-columns: 1fr !important;
+                height: auto !important;
+                gap: 15px !important;
+            }
+            #map {
+                height: 300px !important;
+                margin-bottom: 15px !important;
+            }
+            .hotels-panel {
+                height: 500px !important;
+                padding: 15px !important;
+            }
+            .hotel-card {
+                padding: 12px !important;
+                margin: 8px 0 !important;
+            }
+            .hotel-name {
+                font-size: 1rem !important;
+            }
+            .price {
+                font-size: 1.1rem !important;
+            }
+            .hotel-actions {
+                flex-wrap: wrap !important;
+                gap: 5px !important;
+            }
+            .action-btn {
+                flex: 1 !important;
+                min-width: 120px !important;
+                padding: 10px 8px !important;
+                font-size: 0.8rem !important;
+            }
+            #loadMoreContainer {
+                margin-top: 10px !important;
+            }
+            .status {
+                font-size: 0.9rem !important;
+                padding: 8px !important;
+            }
+            .cookie-content {
+                flex-direction: column !important;
+                text-align: center !important;
+            }
+            .cookie-actions {
+                justify-content: center !important;
+            }
+            .cookie-modal-content {
+                margin: 10px !important;
+                padding: 20px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2rem !important;
+            }
+            .search-container {
+                padding: 15px !important;
+            }
+            #map {
+                height: 250px !important;
+            }
+            .hotels-panel {
+                height: 400px !important;
+                padding: 10px !important;
+            }
+            .hotel-card {
+                padding: 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- GDPR Cookie Banner -->
+    <div class="cookie-banner" id="cookieBanner">
+        <div class="cookie-content">
+            <div class="cookie-text">
+                <h3>🍪 Privacy & Analytics</h3>
+                <p>We use cookies to improve your experience and provide analytics to our hotel partners. This helps us show you better prices and improve our service. You can manage your preferences anytime.</p>
+            </div>
+            <div class="cookie-actions">
+                <button class="cookie-btn cookie-accept" onclick="acceptCookies()">Accept All</button>
+                <button class="cookie-btn cookie-settings" onclick="showCookieSettings()">Settings</button>
+                <button class="cookie-btn cookie-decline" onclick="declineCookies()">Decline</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cookie Settings Modal -->
+    <div class="cookie-modal" id="cookieModal">
+        <div class="cookie-modal-content">
+            <h2>🍪 Cookie Preferences</h2>
+            
+            <div class="cookie-category">
+                <h3>
+                    Essential Cookies
+                    <label class="cookie-toggle">
+                        <input type="checkbox" checked disabled>
+                        <span class="cookie-slider"></span>
+                    </label>
+                </h3>
+                <p>Required for basic website functionality. These cannot be disabled.</p>
+            </div>
+
+            <div class="cookie-category">
+                <h3>
+                    Analytics Cookies
+                    <label class="cookie-toggle">
+                        <input type="checkbox" id="analyticsToggle" checked>
+                        <span class="cookie-slider"></span>
+                    </label>
+                </h3>
+                <p>Help us understand how visitors use our site. Data is shared with hotel partners to improve pricing and availability.</p>
+            </div>
+
+            <div class="cookie-category">
+                <h3>
+                    Performance Cookies
+                    <label class="cookie-toggle">
+                        <input type="checkbox" id="performanceToggle" checked>
+                        <span class="cookie-slider"></span>
+                    </label>
+                </h3>
+                <p>Allow us to remember your preferences and provide faster loading times.</p>
+            </div>
+
+            <div class="cookie-modal-actions">
+                <button class="cookie-btn cookie-decline" onclick="hideCookieSettings()">Cancel</button>
+                <button class="cookie-btn cookie-accept" onclick="saveCookieSettings()">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>STAYFINDR</h1>
+            <p>Save Time & Money: See Today's Hotel Prices Across Europe</p>
+        </div>
+            
+        <div class="status" id="connectionStatus">
+            ⏳ Waking up backend...
+        </div>
+
+        <div class="search-container">
+            <form id="searchForm" class="search-form">
+                <div class="form-group">
+                    <label for="city">City</label>
+                    <select id="city">
+                        <option value="stockholm">Stockholm, Sweden</option>
+                        <option value="paris">Paris, France</option>
+                        <option value="london">London, UK</option>
+                        <option value="amsterdam">Amsterdam, Netherlands</option>
+                        <option value="barcelona">Barcelona, Spain</option>
+                        <option value="rome">Rome, Italy</option>
+                        <option value="berlin">Berlin, Germany</option>
+                        <option value="copenhagen">Copenhagen, Denmark</option>
+                        <option value="vienna">Vienna, Austria</option>
+                        <option value="prague">Prague, Czech Republic</option>
+                        <option value="madrid">Madrid, Spain</option>
+                        <option value="milano">Milano, Italy</option>
+                        <option value="zurich">Zürich, Switzerland</option>
+                        <option value="oslo">Oslo, Norway</option>
+                        <option value="helsinki">Helsinki, Finland</option>
+                        <option value="warsaw">Warsaw, Poland</option>
+                        <option value="budapest">Budapest, Hungary</option>
+                        <option value="dublin">Dublin, Ireland</option>
+                        <option value="lisbon">Lisbon, Portugal</option>
+                        <option value="brussels">Brussels, Belgium</option>
+                        <option value="athens">Athens, Greece</option>
+                        <option value="munich">Munich, Germany</option>
+                        <option value="lyon">Lyon, France</option>
+                        <option value="florence">Florence, Italy</option>
+                        <option value="edinburgh">Edinburgh, Scotland</option>
+                        <option value="nice">Nice, France</option>
+                        <option value="palma">Palma, Spain</option>
+                        <option value="santorini">Santorini, Greece</option>
+                        <option value="ibiza">Ibiza, Spain</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="roomType">Room Type</label>
+                    <select id="roomType">
+                        <option value="single">Single Room (1 guest)</option>
+                        <option value="double" selected>Double Room (2 guests)</option>
+                        <option value="family">Family Room (3-4 guests)</option>
+                        <option value="junior_suite">Junior Suite (2 guests)</option>
+                        <option value="suite">Suite/Apartment (2-4 guests)</option>
+                    </select>
+                    <div class="room-type-hint" id="roomTypeHint">Ideal for couples</div>
+                </div>
+                <div class="form-group">
+                    <label for="checkin">Check-in</label>
+                    <input type="date" id="checkin" required>
+                </div>
+                <div class="form-group">
+                    <label for="checkout">Check-out</label>
+                    <input type="date" id="checkout" required>
+                </div>
+                <div class="form-group">
+                    <label for="guests">Guests</label>
+                    <select id="guests">
+                        <option value="1">1 Guest</option>
+                        <option value="2">2 Guests</option>
+                        <option value="3">3 Guests</option>
+                        <option value="4">4 Guests</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="search-btn" id="searchButton">
+                        🔍 Search Hotels
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="main-content">
+            <div id="map">🗺️ Map will load when you search for hotels</div>
+            <div class="hotels-panel">
+                <h3 id="hotelsTitle">Hotels</h3>
+                <div id="hotelsList">
+                    <div class="loading">Click "Search Hotels" to find real hotels with accurate stay pricing</div>
+                </div>
+                <div id="loadMoreContainer" style="display: none; text-align: center; margin-top: 15px;">
+                    <button id="loadMoreBtn" class="search-btn" style="width: 100%;">
+                        📋 Show More Hotels
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terms of Service Section -->
+        <div class="terms-section">
+            <h2>📋 Terms of Service</h2>
+            <div class="terms-content">
+                <h3>Service Description</h3>
+                <p>STAYFINDR is a hotel search and comparison service that connects users to Booking.com's inventory. We provide accurate pricing information and facilitate bookings through our partner platform.</p>
+                
+                <h3>Data Collection & Analytics</h3>
+                <p>We collect anonymized usage data to improve our service and provide analytics to our hotel partners. This includes search preferences, popular destinations, and booking patterns. Personal data is never shared without consent.</p>
+                
+                <h3>Booking Terms</h3>
+                <p>All hotel bookings are processed through Booking.com. STAYFINDR acts as an intermediary service. Final booking terms, cancellation policies, and pricing are governed by Booking.com's terms and conditions.</p>
+                
+                <h3>Pricing Accuracy</h3>
+                <p>Prices displayed are total costs for your entire stay, calculated from real-time data. While we strive for accuracy, final prices may vary due to availability changes, taxes, or booking conditions on Booking.com.</p>
+                
+                <h3>Privacy & Data</h3>
+                <p>We are GDPR compliant and respect your privacy choices. You can manage cookie preferences anytime. Search analytics help our partners provide better pricing and availability. We do not store personal payment information - all transactions are handled securely by Booking.com.</p>
+                
+                <h3>Limitation of Liability</h3>
+                <p>STAYFINDR provides search and comparison services only. We are not responsible for hotel service quality, booking issues, or disputes that may arise during your stay. Please contact Booking.com directly for booking support.</p>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div class="about-section">
+            <h2>🏨 About STAYFINDR</h2>
+            <div class="about-content">
+                <p>STAYFINDR is your smart hotel search partner that helps you find the best hotel prices across Europe. We connect you directly to Booking.com's extensive inventory with real-time data from 29 major European cities.</p>
+                
+                <p>Our mission is simple: <strong>Show you real-time data that saves your time and money</strong> by displaying relevant hotel options based on your specific needs - from single rooms to luxurious junior suites.</p>
+                
+                <div class="contact-info">
+                    <h3>📧 Contact Us</h3>
+                    <p>Have questions or feedback? We'd love to hear from you!</p>
+                    <p><strong>Email:</strong> <a href="mailto:hello@stayfindr.com">hello@stayfindr.com</a></p>
+                    <p><em>We respond within 24 hours</em></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        let map;
+        let currentMarkers = [];
+        let currentHotels = [];
+        let allHotelsData = [];
+        let currentlyShowing = 5;
+        const BACKEND_URL = 'https://actionly.onrender.com';
+
+        // GDPR Cookie Management
+        let cookieConsent = {
+            analytics: false,
+            performance: false,
+            essential: true
+        };
+
+        // Room type descriptions for UI feedback
+        const roomTypeDescriptions = {
+            'single': 'Perfect for solo travelers - Ready to search!',
+            'double': 'Ideal for couples - Ready to search!',
+            'family': 'Spacious accommodation for families - Ready to search!',
+            'junior_suite': 'Spacious room with sitting area - Ready to search!',
+            'suite': 'Luxury accommodation with separate living area - Ready to search!'
+        };
+
+        // Cookie Management Functions
+        function checkCookieConsent() {
+            const consent = localStorage.getItem('stayfindr_cookie_consent');
+            if (!consent) {
+                setTimeout(() => {
+                    document.getElementById('cookieBanner').classList.add('show');
+                }, 2000);
+            } else {
+                cookieConsent = JSON.parse(consent);
+                initializeAnalytics();
+            }
+        }
+
+        function acceptCookies() {
+            cookieConsent = {
+                analytics: true,
+                performance: true,
+                essential: true
+            };
+            saveCookieConsent();
+            hideCookieBanner();
+            initializeAnalytics();
+        }
+
+        function declineCookies() {
+            cookieConsent = {
+                analytics: false,
+                performance: false,
+                essential: true
+            };
+            saveCookieConsent();
+            hideCookieBanner();
+        }
+
+        function showCookieSettings() {
+            document.getElementById('cookieModal').classList.add('show');
+            document.getElementById('analyticsToggle').checked = cookieConsent.analytics;
+            document.getElementById('performanceToggle').checked = cookieConsent.performance;
+        }
+
+        function hideCookieSettings() {
+            document.getElementById('cookieModal').classList.remove('show');
+        }
+
+        function saveCookieSettings() {
+            cookieConsent.analytics = document.getElementById('analyticsToggle').checked;
+            cookieConsent.performance = document.getElementById('performanceToggle').checked;
+            saveCookieConsent();
+            hideCookieSettings();
+            hideCookieBanner();
+            
+            if (cookieConsent.analytics) {
+                initializeAnalytics();
+            }
+        }
+
+        function saveCookieConsent() {
+            localStorage.setItem('stayfindr_cookie_consent', JSON.stringify(cookieConsent));
+            localStorage.setItem('stayfindr_consent_date', new Date().toISOString());
+        }
+
+        function hideCookieBanner() {
+            document.getElementById('cookieBanner').classList.remove('show');
+        }
+
+        function initializeAnalytics() {
+            if (!cookieConsent.analytics) {
+                console.log('📊 Analytics disabled by user preference');
+                return;
+            }
+            
+            console.log('📊 Analytics enabled - tracking user interactions');
+            
+            // Initialize session tracking
+            if (!sessionStorage.getItem('stayfindr_session_id')) {
+                const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('stayfindr_session_id', sessionId);
+            }
+
+            // Track page view
+            trackEvent('page_view', {
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+                user_agent: navigator.userAgent,
+                screen_resolution: `${screen.width}x${screen.height}`
+            });
+        }
+
+        function trackEvent(eventType, data) {
+            if (!cookieConsent.analytics) {
+                return;
+            }
+
+            const eventData = {
+                event_type: eventType,
+                session_id: sessionStorage.getItem('stayfindr_session_id'),
+                timestamp: new Date().toISOString(),
+                url: window.location.href,
+                ...data
+            };
+
+            // Send to backend analytics endpoint
+            try {
+                fetch(`${BACKEND_URL}/api/analytics/track-event`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(eventData)
+                }).catch(error => {
+                    console.log('Analytics tracking failed (offline):', error);
+                });
+            } catch (error) {
+                console.log('Analytics tracking error:', error);
+            }
+        }
+
+        // Wait for Leaflet to load properly with retry mechanism
+        function waitForLeaflet() {
+            return new Promise((resolve) => {
+                let attempts = 0;
+                const maxAttempts = 30; // 15 seconds max wait
+                
+                function checkLeaflet() {
+                    attempts++;
+                    if (typeof L !== 'undefined' && L.map) {
+                        console.log('✅ Leaflet loaded successfully');
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        console.log('❌ Leaflet failed to load after 15 seconds, proceeding without map');
+                        resolve();
+                    } else {
+                        console.log(`⏳ Waiting for Leaflet... (${attempts}/${maxAttempts})`);
+                        setTimeout(checkLeaflet, 500);
+                    }
+                }
+                checkLeaflet();
+            });
+        }
+
+        // Alternative: Load Leaflet dynamically if not available
+        function loadLeafletDynamically() {
+            return new Promise((resolve) => {
+                if (typeof L !== 'undefined') {
+                    resolve();
+                    return;
+                }
+
+                const cssLink = document.createElement('link');
+                cssLink.rel = 'stylesheet';
+                cssLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';
+                document.head.appendChild(cssLink);
+
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js';
+                script.onload = () => {
+                    console.log('✅ Leaflet loaded dynamically from CDNJS');
+                    setTimeout(resolve, 100); // Small delay to ensure full load
+                };
+                script.onerror = () => {
+                    console.log('❌ Failed to load Leaflet from CDNJS');
+                    resolve();
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        // Initialize the application
+        function initializeApp() {
+            console.log('🚀 Initializing STAYFINDR with GDPR-compliant analytics...');
+            
+            testBackendConnection();
+            initMap();
+            setupEventListeners();
+            setDefaultDates();
+            checkCookieConsent();
+            
+            console.log('✅ STAYFINDR initialized successfully');
+        }
+
+        async function testBackendConnection() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/cities`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('connectionStatus').innerHTML = `✅ Backend ready! ${data.total} cities available`;
+                    document.getElementById('connectionStatus').className = 'status success-indicator';
+                } else {
+                    throw new Error('Backend not responding');
+                }
+            } catch (error) {
+                document.getElementById('connectionStatus').innerHTML = '❌ Backend connection failed. <button class="retry-btn" onclick="testBackendConnection()">🔄 Try Again</button>';
+                document.getElementById('connectionStatus').className = 'status error';
+            }
+        }
+
+        function initMap() {
+            try {
+                if (typeof L !== 'undefined' && L.map) {
+                    map = L.map('map').setView([59.3293, 18.0686], 6);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors',
+                        maxZoom: 18
+                    }).addTo(map);
+                    console.log('🗺️ OpenStreetMap initialized successfully');
+                    document.getElementById('map').style.background = 'none';
+                } else {
+                    console.log('⚠️ Leaflet not available, using fallback');
+                    document.getElementById('map').innerHTML = `
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #666;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">🗺️</div>
+                            <div>Interactive map will appear when you search</div>
+                            <button onclick="retryMapLoad()" style="margin-top: 10px; padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                🔄 Retry Map Loading
+                            </button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Map initialization failed:', error);
+                document.getElementById('map').innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        ❌ Map temporarily unavailable<br>
+                        <small>Search functionality works perfectly!</small>
+                    </div>
+                `;
+            }
+        }
+
+        async function retryMapLoad() {
+            console.log('🔄 Retrying map load...');
+            document.getElementById('map').innerHTML = '<div style="text-align: center; padding: 50px; color: #666;">⏳ Loading map...</div>';
+            
+            await loadLeafletDynamically();
+            await waitForLeaflet();
+            initMap();
+        }
+
+        function setupEventListeners() {
+            const searchForm = document.getElementById('searchForm');
+            if (searchForm) {
+                searchForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    searchHotels();
+                });
+                console.log('📋 Form event listeners setup');
+            }
+
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (loadMoreBtn) {
+                loadMoreBtn.addEventListener('click', function() {
+                    showMoreHotels();
+                });
+            }
+
+            // Room type change handler with smart guest updating
+            const roomTypeSelect = document.getElementById('roomType');
+            const guestsSelect = document.getElementById('guests');
+            const roomTypeHint = document.getElementById('roomTypeHint');
+
+            if (roomTypeSelect && guestsSelect && roomTypeHint) {
+                roomTypeSelect.addEventListener('change', function() {
+                    const roomType = this.value;
+                    
+                    // Track room type selection
+                    trackEvent('room_type_change', {
+                        room_type: roomType,
+                        previous_guests: guestsSelect.value
+                    });
+                    
+                    // Update guests automatically based on room type
+                    switch(roomType) {
+                        case 'single':
+                            guestsSelect.value = '1';
+                            break;
+                        case 'double':
+                            guestsSelect.value = '2';
+                            break;
+                        case 'family':
+                            guestsSelect.value = '4';
+                            break;
+                        case 'junior_suite':
+                            guestsSelect.value = '2';
+                            break;
+                        case 'suite':
+                            guestsSelect.value = '3';
+                            break;
+                    }
+                    
+                    // Update hint text
+                    roomTypeHint.textContent = roomTypeDescriptions[roomType] || 'Ready to search!';
+                });
+            }
+        }
+
+        function setDefaultDates() {
+            const today = new Date();
+            const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+            
+            document.getElementById('checkin').value = today.toISOString().split('T')[0];
+            document.getElementById('checkout').value = tomorrow.toISOString().split('T')[0];
+        }
+
+        async function searchHotels() {
+            const city = document.getElementById('city').value;
+            const roomType = document.getElementById('roomType').value;
+            const checkin = document.getElementById('checkin').value;
+            const checkout = document.getElementById('checkout').value;
+            const guests = document.getElementById('guests').value;
+
+            console.log(`🔍 Searching hotels: ${city}, ${roomType}, ${checkin} to ${checkout}, ${guests} guests`);
+
+            // Track search event for analytics
+            trackEvent('hotel_search', {
+                city: city,
+                room_type: roomType,
+                checkin: checkin,
+                checkout: checkout,
+                guests: guests,
+                nights: Math.ceil((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24))
+            });
+
+            const searchButton = document.getElementById('searchButton');
+            const hotelsList = document.getElementById('hotelsList');
+            const hotelsTitle = document.getElementById('hotelsTitle');
+
+            searchButton.disabled = true;
+            searchButton.innerHTML = '⏳ Searching...';
+            hotelsList.innerHTML = '<div class="loading">🔍 Searching real hotels with accurate stay pricing...</div>';
+            hotelsTitle.innerHTML = `Hotels in ${city}`;
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/hotels?city=${city}&room_type=${roomType}&checkin=${checkin}&checkout=${checkout}&adults=${guests}&rooms=1`);
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (data.hotels && data.hotels.length > 0) {
+                    allHotelsData = data.hotels;
+                    currentlyShowing = 5;
+                    
+                    displayHotels(data.hotels.slice(0, 5), data.city, data.pricing);
+                    updateMap(data.hotels.slice(0, 5));
+                    
+                    const loadMoreContainer = document.getElementById('loadMoreContainer');
+                    if (data.hotels.length > 5) {
+                        loadMoreContainer.style.display = 'block';
+                        updateLoadMoreButton();
+                    } else {
+                        loadMoreContainer.style.display = 'none';
+                    }
+                    
+                    const nights = data.search_params.nights || 1;
+                    document.getElementById('connectionStatus').innerHTML = 
+                        `✅ Found ${data.total_found} hotels in ${data.city}! Showing total cost for ${nights} nights (${Math.min(5, data.hotels.length)} displayed)`;
+                    document.getElementById('connectionStatus').className = 'status success-indicator';
+
+                    // Track successful search
+                    trackEvent('search_results', {
+                        city: city,
+                        hotels_found: data.total_found,
+                        hotels_displayed: Math.min(5, data.hotels.length),
+                        nights: nights
+                    });
+                } else {
+                    hotelsList.innerHTML = '<div class="error">No hotels found for this city and dates.</div>';
+                    document.getElementById('loadMoreContainer').style.display = 'none';
+                    
+                    // Track empty search
+                    trackEvent('search_no_results', {
+                        city: city,
+                        room_type: roomType,
+                        checkin: checkin,
+                        checkout: checkout
+                    });
+                }
+
+            } catch (error) {
+                console.error('Search error:', error);
+                hotelsList.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                
+                document.getElementById('connectionStatus').innerHTML = '❌ Search failed - Check backend connection';
+                document.getElementById('connectionStatus').className = 'status error';
+
+                // Track search error
+                trackEvent('search_error', {
+                    city: city,
+                    error_message: error.message
+                });
+            }
+
+            searchButton.disabled = false;
+            searchButton.innerHTML = '🔍 Search Hotels';
+        }
+
+        function showMoreHotels() {
+            const nextBatch = Math.min(currentlyShowing + 5, allHotelsData.length);
+            const hotelsToShow = allHotelsData.slice(0, nextBatch);
+            
+            currentlyShowing = nextBatch;
+            
+            displayHotels(hotelsToShow, '');
+            updateMap(hotelsToShow);
+            updateLoadMoreButton();
+            
+            document.getElementById('connectionStatus').innerHTML = 
+                `✅ Showing ${currentlyShowing} of ${allHotelsData.length} hotels`;
+
+            // Track load more action
+            trackEvent('load_more_hotels', {
+                previous_count: currentlyShowing - 5,
+                new_count: currentlyShowing,
+                total_available: allHotelsData.length
+            });
+        }
+
+        function updateLoadMoreButton() {
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            const loadMoreContainer = document.getElementById('loadMoreContainer');
+            
+            if (currentlyShowing >= allHotelsData.length) {
+                loadMoreContainer.style.display = 'none';
+            } else {
+                const remaining = allHotelsData.length - currentlyShowing;
+                loadMoreBtn.innerHTML = `📋 Show ${Math.min(5, remaining)} More Hotels (${remaining} remaining)`;
+            }
+        }
+
+        function displayHotels(hotels, cityName, pricingInfo) {
+            currentHotels = hotels;
+            const hotelsList = document.getElementById('hotelsList');
+
+            let html = '';
+            hotels.forEach((hotel, index) => {
+                const priceDisplay = hotel.price !== 'N/A' ? `€${hotel.price}/stay` : 'Price on request';
+                const stars = '⭐'.repeat(Math.floor(hotel.rating));
+                const nights = hotel.nights || 1;
+
+                html += `
+                    <div class="hotel-card" data-hotel-id="${hotel.id}" 
+                         onmouseover="highlightMarker(${index})" 
+                         onmouseout="unhighlightMarker(${index})">
+                        <div class="hotel-name">${hotel.name}</div>
+                        <div class="hotel-details">📍 ${hotel.address}</div>
+                        ${hotel.room_description ? `<div class="room-info">${hotel.room_description}</div>` : ''}
+                        <div class="price-info">
+                            <span class="price">${priceDisplay}</span>
+                            <span class="rating">${stars} ${hotel.rating}/5</span>
+                        </div>
+                        ${nights > 1 ? `<div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">Total for ${nights} nights</div>` : ''}
+                        <div class="hotel-actions">
+                            <a href="${hotel.booking_url}" target="_blank" class="action-btn book-btn" 
+                               onclick="trackBookingClick('${hotel.id}', '${hotel.name}', '${cityName}', '${hotel.room_type || 'double'}', '${hotel.price}')">
+                                Book on Booking.com
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            hotelsList.innerHTML = html;
+        }
+
+        function trackBookingClick(hotelId, hotelName, city, roomType, price) {
+            // Track booking button clicks for analytics
+            trackEvent('booking_click', {
+                hotel_id: hotelId,
+                hotel_name: hotelName,
+                city: city,
+                room_type: roomType,
+                price: price,
+                nights: currentHotels.find(h => h.id == hotelId)?.nights || 1
+            });
+
+            // Also send to backend for partner analytics
+            try {
+                fetch(`${BACKEND_URL}/api/analytics/track-click`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        hotel_id: hotelId,
+                        hotel_name: hotelName,
+                        city: city,
+                        room_type: roomType,
+                        price: price,
+                        session_id: sessionStorage.getItem('stayfindr_session_id'),
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                console.log(`📊 Tracked booking click: ${hotelName} in ${city}`);
+            } catch (error) {
+                console.log('Analytics tracking failed:', error);
+            }
+        }
+
+        function updateMap(hotels) {
+            if (!map || typeof L === 'undefined') {
+                console.log('Map not available, skipping update');
+                return;
+            }
+
+            try {
+                currentMarkers.forEach(marker => map.removeLayer(marker));
+                currentMarkers = [];
+
+                if (hotels.length > 0) {
+                    const center = hotels[0].coordinates;
+                    map.setView(center, 12);
+
+                    hotels.forEach((hotel, index) => {
+                        const marker = L.marker(hotel.coordinates)
+                            .addTo(map)
+                            .bindPopup(`
+                                <b>${hotel.name}</b><br>
+                                ${hotel.price !== 'N/A' ? `€${hotel.price}/stay` : 'Price on request'}<br>
+                                ⭐ ${hotel.rating}/5
+                                ${hotel.nights > 1 ? `<br><small>Total for ${hotel.nights} nights</small>` : ''}
+                            `);
+
+                        marker.on('click', () => {
+                            highlightHotelCard(index);
+                            // Track map interaction
+                            trackEvent('map_marker_click', {
+                                hotel_id: hotel.id,
+                                hotel_name: hotel.name
+                            });
+                        });
+                        currentMarkers.push(marker);
+                    });
+                }
+            } catch (error) {
+                console.error('Map update failed:', error);
+            }
+        }
+
+        function highlightMarker(index) {
+            if (currentMarkers[index] && typeof L !== 'undefined') {
+                try {
+                    currentMarkers[index].openPopup();
+                } catch (error) {
+                    console.log('Marker highlight failed:', error);
+                }
+            }
+        }
+
+        function unhighlightMarker(index) {
+            if (currentMarkers[index] && typeof L !== 'undefined') {
+                try {
+                    currentMarkers[index].closePopup();
+                } catch (error) {
+                    console.log('Marker unhighlight failed:', error);
+                }
+            }
+        }
+
+        function highlightHotelCard(index) {
+            document.querySelectorAll('.hotel-card').forEach(card => 
+                card.classList.remove('highlighted'));
+
+            const targetCard = document.querySelector(`[data-hotel-id="${currentHotels[index].id}"]`);
+            if (targetCard) {
+                targetCard.classList.add('highlighted');
+                targetCard.scrollIntoView({behavior: 'smooth', block: 'center'});
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('📄 Page loaded, initializing STAYFINDR...');
+            
+            // Try multiple loading strategies
+            await loadLeafletDynamically();
+            await waitForLeaflet();
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
